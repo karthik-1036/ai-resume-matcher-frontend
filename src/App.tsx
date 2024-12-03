@@ -77,16 +77,20 @@ function App() {
     }
 
     try {
+      console.log('Sending request to:', process.env.REACT_APP_API_URL);
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || ''}/analyze`,
+        `${process.env.REACT_APP_API_URL}/analyze`,
         formData,
         {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
-          timeout: 30000,
+          withCredentials: false,
+          timeout: 60000, // Increased timeout to 60 seconds
         }
       );
+
+      console.log('Response:', response.data);
 
       if (response.data.error) {
         throw new Error(response.data.error);
@@ -100,15 +104,13 @@ function App() {
 
       setAnalysis(analysisData);
     } catch (err: any) {
-      let errorMessage = 'Error analyzing resume. ';
-      if (err.response) {
-        errorMessage += err.response.data.error || err.response.statusText;
-      } else if (err.request) {
-        errorMessage += 'Could not connect to server. Please make sure the backend is running.';
-      } else {
-        errorMessage += err.message;
-      }
-      setError(errorMessage);
+      console.error('Error details:', err);
+      setError(
+        err.response?.data?.error || 
+        err.response?.data?.message || 
+        err.message || 
+        'An error occurred while analyzing the resume'
+      );
     } finally {
       setLoading(false);
     }
